@@ -1,0 +1,16 @@
+images {
+  image: "/images/body.png"
+}
+images {
+  image: "/images/ball_1.png"
+}
+images {
+  image: "/images/ball_2.png"
+}
+images {
+  image: "/images/ball_3.png"
+}
+images {
+  image: "/images/rect.png"
+}
+extrude_borders: 2

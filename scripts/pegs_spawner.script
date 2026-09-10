@@ -1,0 +1,26 @@
+local config = require "scripts.config"
+local slot_layout = require "scripts.slot_layout"
+
+local function create_peg_triangle(self)
+	local origin = go.get_world_position()
+	local triangle_bottom_count = math.max(1, math.floor(config.pegs.triangle_bottom_count))
+	local horizontal_spacing = slot_layout.get_peg_horizontal_spacing()
+	local triangle_height = (triangle_bottom_count - 1) * horizontal_spacing
+	local top_y = origin.y + triangle_height * 0.5
+
+	for row = 1, triangle_bottom_count do
+		local y = top_y - (row - 1) * horizontal_spacing
+		local first_x = origin.x - (row - 1) * horizontal_spacing * 0.5
+
+		for column = 1, row do
+			local x = first_x + (column - 1) * horizontal_spacing
+			factory.create("#peg_factory", vmath.vector3(x, y, origin.z), nil, {
+				row = row,
+			})
+		end
+	end
+end
+
+function init(self)
+	create_peg_triangle(self)
+end

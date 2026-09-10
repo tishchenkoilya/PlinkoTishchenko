@@ -1,0 +1,7 @@
+images {
+  image: "/images/btn_green_normal.png"
+}
+images {
+  image: "/images/btn_green_push.png"
+}
+extrude_borders: 2

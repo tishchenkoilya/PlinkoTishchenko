@@ -1,0 +1,38 @@
+script: "/scripts/gui.gui_script"
+fonts {
+  name: "main_font"
+  font: "/fonts/main_font.font"
+}
+textures {
+  name: "ui"
+  texture: "/graphics/ui.atlas"
+}
+nodes {
+  position {
+    x: 280.0
+    y: 50.0
+  }
+  type: TYPE_BOX
+  texture: "ui/btn_green_normal"
+  id: "play_button"
+  yanchor: YANCHOR_BOTTOM
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: 8.0
+  }
+  size {
+    x: 100.0
+    y: 40.0
+  }
+  type: TYPE_TEXT
+  text: "Play"
+  font: "main_font"
+  id: "text"
+  parent: "play_button"
+  inherit_alpha: true
+}
+material: "/builtins/materials/gui.material"
+adjust_reference: ADJUST_REFERENCE_PARENT

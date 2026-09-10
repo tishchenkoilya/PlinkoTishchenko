@@ -1,0 +1,76 @@
+local config = require "scripts.config"
+local slot_layout = require "scripts.slot_layout"
+
+local SPAWN_BALL = hash("spawn_ball")
+
+local function select_target_slot()
+	local weights = config.slots.probability
+	local slot_count = slot_layout.get_slot_count()
+	assert(#weights > 0, "config.slots.probability must contain at least one weight")
+
+	local total_weight = 0
+	for slot_index = 1, slot_count do
+		local weight = slot_layout.get_mirrored_value(weights, slot_index, slot_count)
+		assert(weight >= 0, "config.slots.probability cannot contain negative weights")
+		total_weight = total_weight + weight
+	end
+	assert(total_weight > 0, "config.slots.probability must contain a positive weight")
+
+	local random_weight = math.random() * total_weight
+	for slot_index = 1, slot_count do
+		random_weight = random_weight - slot_layout.get_mirrored_value(weights, slot_index, slot_count)
+		if random_weight <= 0 then
+			return slot_index
+		end
+	end
+
+	return slot_count
+end
+
+local function create_path(target_slot)
+	local row_count = math.max(1, math.floor(config.pegs.triangle_bottom_count))
+	local right_count = target_slot - 1
+	local directions = {}
+
+	for row = 1, row_count do
+		directions[row] = row <= right_count
+	end
+
+	-- Shuffle the required number of left/right decisions. Every ordering is a
+	-- valid route, while the number of right turns fixes the final slot exactly.
+	for row = row_count, 2, -1 do
+		local other_row = math.random(row)
+		directions[row], directions[other_row] = directions[other_row], directions[row]
+	end
+
+	local path_bits = 0
+	local path_debug = {}
+	for row = 1, row_count do
+		if directions[row] then
+			path_bits = path_bits + 2 ^ (row - 1)
+			path_debug[row] = "R"
+		else
+			path_debug[row] = "L"
+		end
+	end
+
+	return path_bits, table.concat(path_debug)
+end
+
+local function create_ball(self)
+	local position = go.get_world_position()
+
+	local target_slot = select_target_slot()
+	local path_bits, path_debug = create_path(target_slot)
+
+	factory.create("#ball_factory", position, nil, {
+		path_bits = path_bits,
+	})
+	print(string.format("Spawned ball target slot: %d, path: %s", target_slot, path_debug))
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == SPAWN_BALL then
+		create_ball(self)
+	end
+end

@@ -1,0 +1,48 @@
+local config = require "scripts.config"
+local slot_layout = require "scripts.slot_layout"
+
+go.property("path_bits", 0)
+
+local COLLISION_RESPONSE = hash("collision_response")
+local PEG_GROUP = hash("peg")
+local SLOT_GROUP = hash("slot")
+
+function init(self)
+	self.steered_rows = {}
+	local gravity = math.abs(sys.get_config_number("physics.gravity_y", -600))
+	local row_fall_time = math.sqrt(2 * slot_layout.get_peg_horizontal_spacing() / gravity)
+	self.peg_steering_speed = slot_layout.get_peg_horizontal_spacing() * 0.5 / row_fall_time
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id ~= COLLISION_RESPONSE then
+		return
+	end
+
+	if message.other_group == SLOT_GROUP then
+		if not self.despawn_timer then
+			self.despawn_timer = timer.delay(config.ball.despawn_delay, false, function()
+				go.delete()
+			end)
+		end
+		return
+	end
+
+	if message.other_group ~= PEG_GROUP then
+		return
+	end
+
+	local peg_script = msg.url(nil, message.other_id, "script")
+	local row = math.floor(go.get(peg_script, "row"))
+	if row < 1 or row > config.pegs.triangle_bottom_count or self.steered_rows[row] then
+		return
+	end
+
+	self.steered_rows[row] = true
+	local goes_right = math.floor(self.path_bits / 2 ^ (row - 1)) % 2 == 1
+	local direction = goes_right and 1 or -1
+	local velocity = go.get("#collisionobject", "linear_velocity")
+	velocity.x = direction * self.peg_steering_speed
+	velocity.y = 0
+	go.set("#collisionobject", "linear_velocity", velocity)
+end

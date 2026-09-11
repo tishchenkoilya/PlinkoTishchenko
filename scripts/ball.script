@@ -1,9 +1,12 @@
 local config = require "scripts.config"
+local plinko_manager = require "scripts.plinko_manager"
 local slot_layout = require "scripts.slot_layout"
 
 go.property("path_bits", 0)
+go.property("score", 0)
 
 local COLLISION_RESPONSE = hash("collision_response")
+local BALL_FELL = hash("ball_fell")
 local PEG_GROUP = hash("peg")
 local SLOT_GROUP = hash("slot")
 
@@ -21,6 +24,9 @@ function on_message(self, message_id, message, sender)
 
 	if message.other_group == SLOT_GROUP then
 		if not self.despawn_timer then
+			local slot_script = msg.url(nil, message.other_id, "script")
+			msg.post(slot_script, BALL_FELL)
+			plinko_manager.add_score(self.score)
 			self.despawn_timer = timer.delay(config.params.despawn_delay, false, function()
 				go.delete()
 			end)

@@ -45,7 +45,7 @@ embedded_components {
   "  }\n"
   "  data: 8.5\n"
   "}\n"
-  "linear_damping: 0.8\n"
+  "linear_damping: 0.9\n"
   "locked_rotation: true\n"
   ""
 }

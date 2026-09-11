@@ -2,8 +2,9 @@ local M = {}
 
 M.params = {
 	balls_count = 10,
-	multiple_balls_count = 4,
-	ball_regeneration_interval = 30,
+	balls_max_count = 20,
+	multiple_balls_count = 5,
+	ball_regeneration_interval = 5,
 
 	slots_count = 10,
 	spacing = 48,
@@ -12,12 +13,21 @@ M.params = {
 	sprite_width = 32,
 
 	-- Ordered from the center slots towards both mirrored outer edges. Extra colors are ignored
-	colors = {
-		vmath.vector4(0.95, 0.25, 0.20, 1.0),
-		vmath.vector4(1.00, 0.55, 0.15, 1.0),
-		vmath.vector4(1.00, 0.85, 0.20, 1.0),
-		vmath.vector4(0.30, 0.75, 0.35, 1.0),
-		vmath.vector4(0.20, 0.55, 0.95, 1.0),
+	slots_colors = {
+		vmath.vector4(0.95, 0.55, 0.50, 1.0),
+		vmath.vector4(1.00, 0.80, 0.40, 1.0),
+		vmath.vector4(1.00, 0.95, 0.50, 1.0),
+		vmath.vector4(0.60, 0.95, 0.65, 1.0),
+		vmath.vector4(0.50, 0.85, 0.95, 1.0),
+	},
+
+	-- Ordered from the center slots towards both mirrored outer edges. Extra scores are ignored
+	slots_scores = {
+		1,
+		2,
+		3,
+		4,
+		5,
 	},
 
 	-- Ordered from the center slots towards both mirrored outer edges. Relative probability weights

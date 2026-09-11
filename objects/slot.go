@@ -60,3 +60,7 @@ embedded_components {
   "}\n"
   ""
 }
+components {
+  id: "script"
+  component: "/scripts/slot.script"
+}

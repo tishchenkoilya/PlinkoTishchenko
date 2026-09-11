@@ -3,6 +3,21 @@ local plinko_manager = require "scripts.plinko_manager"
 
 local TOUCH = hash("touch")
 local SPAWN_BALL = hash("spawn_ball")
+local BUTTON_NORMAL = hash("btn_green_normal")
+local BUTTON_PUSH = hash("btn_green_push")
+
+local function release_button(self)
+	if self.pressed_button then
+		gui.play_flipbook(self.pressed_button, BUTTON_NORMAL)
+		self.pressed_button = nil
+	end
+end
+
+local function press_button(self, button)
+	release_button(self)
+	self.pressed_button = button
+	gui.play_flipbook(button, BUTTON_PUSH)
+end
 
 local function format_time(seconds)
 	seconds = math.max(0, math.ceil(seconds))
@@ -31,6 +46,7 @@ function init(self)
 
 	self.button_x1 = gui.get_node("button_x1")
 	self.button_xn = gui.get_node("button_xn")
+	self.button_test_add = gui.get_node("button_test_add")
 	self.button_xn_text = gui.get_node("text1")
 	self.balls_count_text = gui.get_node("vlaue")
 	self.timer_text = gui.get_node("timer")
@@ -46,11 +62,23 @@ function update(self, dt)
 end
 
 function on_input(self, action_id, action)
-	if action_id == TOUCH and action.pressed then
+	if action_id ~= TOUCH then
+		return
+	end
+
+	if action.pressed then
 		if gui.pick_node(self.button_x1, action.x, action.y) then
+			press_button(self, self.button_x1)
 			try_spawn_balls(self, 1)
 		elseif gui.pick_node(self.button_xn, action.x, action.y) then
+			press_button(self, self.button_xn)
 			try_spawn_balls(self, config.params.multiple_balls_count)
+		elseif gui.pick_node(self.button_test_add, action.x, action.y) then
+			press_button(self, self.button_test_add)
+			plinko_manager.add_ball()
+			update_status(self)
 		end
+	elseif action.released then
+		release_button(self)
 	end
 end

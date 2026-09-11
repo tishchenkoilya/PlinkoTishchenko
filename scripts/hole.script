@@ -62,11 +62,14 @@ local function create_ball(self)
 
 	local target_slot = select_target_slot()
 	local path_bits, path_debug = create_path(target_slot)
+	assert(#config.params.slots_scores > 0, "config.params.slots_scores must contain at least one score")
+	local score = slot_layout.get_mirrored_value(config.params.slots_scores, target_slot, slot_layout.get_slot_count())
 
 	factory.create("#ball_factory", position, nil, {
 		path_bits = path_bits,
+		score = score,
 	})
-	print(string.format("Spawned ball target slot: %d, path: %s", target_slot, path_debug))
+	print(string.format("Spawned ball target slot: %d, score: %d, path: %s", target_slot, score, path_debug))
 end
 
 function on_message(self, message_id, message, sender)

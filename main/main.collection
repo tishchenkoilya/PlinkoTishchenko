@@ -25,6 +25,10 @@ instances {
     z: 1.0
   }
 }
+instances {
+  id: "debug"
+  prototype: "/objects/debug.go"
+}
 scale_along_z: 0
 embedded_instances {
   id: "camera"

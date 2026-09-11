@@ -4,17 +4,17 @@ local slot_layout = require "scripts.slot_layout"
 local SPAWN_BALL = hash("spawn_ball")
 
 local function select_target_slot()
-	local weights = config.slots.probability
+	local weights = config.params.probability
 	local slot_count = slot_layout.get_slot_count()
-	assert(#weights > 0, "config.slots.probability must contain at least one weight")
+	assert(#weights > 0, "config.params.probability must contain at least one weight")
 
 	local total_weight = 0
 	for slot_index = 1, slot_count do
 		local weight = slot_layout.get_mirrored_value(weights, slot_index, slot_count)
-		assert(weight >= 0, "config.slots.probability cannot contain negative weights")
+		assert(weight >= 0, "config.params.probability cannot contain negative weights")
 		total_weight = total_weight + weight
 	end
-	assert(total_weight > 0, "config.slots.probability must contain a positive weight")
+	assert(total_weight > 0, "config.params.probability must contain a positive weight")
 
 	local random_weight = math.random() * total_weight
 	for slot_index = 1, slot_count do
@@ -28,7 +28,7 @@ local function select_target_slot()
 end
 
 local function create_path(target_slot)
-	local row_count = math.max(1, math.floor(config.pegs.triangle_bottom_count))
+	local row_count = slot_layout.get_peg_row_count()
 	local right_count = target_slot - 1
 	local directions = {}
 
@@ -71,6 +71,9 @@ end
 
 function on_message(self, message_id, message, sender)
 	if message_id == SPAWN_BALL then
-		create_ball(self)
+		local count = math.max(1, math.floor(message.count or 1))
+		for _ = 1, count do
+			create_ball(self)
+		end
 	end
 end

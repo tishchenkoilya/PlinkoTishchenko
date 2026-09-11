@@ -21,7 +21,7 @@ function on_message(self, message_id, message, sender)
 
 	if message.other_group == SLOT_GROUP then
 		if not self.despawn_timer then
-			self.despawn_timer = timer.delay(config.ball.despawn_delay, false, function()
+			self.despawn_timer = timer.delay(config.params.despawn_delay, false, function()
 				go.delete()
 			end)
 		end
@@ -34,7 +34,7 @@ function on_message(self, message_id, message, sender)
 
 	local peg_script = msg.url(nil, message.other_id, "script")
 	local row = math.floor(go.get(peg_script, "row"))
-	if row < 1 or row > config.pegs.triangle_bottom_count or self.steered_rows[row] then
+	if row < 1 or row > slot_layout.get_peg_row_count() or self.steered_rows[row] then
 		return
 	end
 

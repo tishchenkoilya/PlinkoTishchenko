@@ -9,13 +9,12 @@ textures {
 }
 nodes {
   position {
-    x: 280.0
+    x: 240.0
     y: 50.0
   }
   type: TYPE_BOX
   texture: "ui/btn_green_normal"
-  id: "play_button"
-  yanchor: YANCHOR_BOTTOM
+  id: "button_x1"
   inherit_alpha: true
   size_mode: SIZE_MODE_AUTO
 }
@@ -28,10 +27,83 @@ nodes {
     y: 40.0
   }
   type: TYPE_TEXT
-  text: "Play"
+  text: "x1"
   font: "main_font"
   id: "text"
-  parent: "play_button"
+  parent: "button_x1"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 320.0
+    y: 50.0
+  }
+  type: TYPE_BOX
+  texture: "ui/btn_green_normal"
+  id: "button_xn"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: 8.0
+  }
+  size {
+    x: 100.0
+    y: 40.0
+  }
+  type: TYPE_TEXT
+  text: "x3"
+  font: "main_font"
+  id: "text1"
+  parent: "button_xn"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 105.0
+    y: 684.0
+  }
+  size {
+    x: 95.0
+    y: 40.0
+  }
+  type: TYPE_TEXT
+  text: "Balls:"
+  font: "main_font"
+  id: "balls"
+  pivot: PIVOT_E
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 10.0
+  }
+  size {
+    x: 95.0
+    y: 40.0
+  }
+  type: TYPE_TEXT
+  text: "0"
+  font: "main_font"
+  id: "vlaue"
+  pivot: PIVOT_W
+  parent: "balls"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 110.0
+    y: 724.0
+  }
+  size {
+    x: 200.0
+    y: 40.0
+  }
+  type: TYPE_TEXT
+  text: "00:00:00"
+  font: "main_font"
+  id: "timer"
   inherit_alpha: true
 }
 material: "/builtins/materials/gui.material"

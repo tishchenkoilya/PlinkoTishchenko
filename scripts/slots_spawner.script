@@ -4,22 +4,22 @@ local slot_layout = require "scripts.slot_layout"
 local PEGS_SPAWNER = "/pegs_spawner"
 
 local function get_slot_color(slot_index, slot_count)
-	return slot_layout.get_mirrored_value(config.slots.colors, slot_index, slot_count)
+	return slot_layout.get_mirrored_value(config.params.colors, slot_index, slot_count)
 end
 
 local function create_slots(self)
-	assert(#config.slots.colors > 0, "config.slots.colors must contain at least one color")
-	assert(config.slots.sprite_width > 0, "config.slots.sprite_width must be greater than zero")
+	assert(#config.params.colors > 0, "config.params.colors must contain at least one color")
+	assert(config.params.sprite_width > 0, "config.params.sprite_width must be greater than zero")
 
 	local origin = go.get_world_position()
 	local pegs_origin = go.get_world_position(PEGS_SPAWNER)
 	local slot_count = slot_layout.get_slot_count()
 	local slot_width = slot_layout.get_slot_width()
-	local triangle_bottom_count = slot_count - 1
-	local triangle_height = (triangle_bottom_count - 1) * slot_layout.get_peg_horizontal_spacing()
-	local bottom_peg_y = pegs_origin.y - triangle_height * 0.5
-	local y = bottom_peg_y - config.slots.offset_from_pegs
-	local slot_scale = slot_width / config.slots.sprite_width
+	local peg_row_count = slot_layout.get_peg_row_count()
+	local triangle_height = (peg_row_count - 1) * slot_layout.get_peg_horizontal_spacing()
+	local bottom_peg_y = pegs_origin.y + config.params.offset_y - triangle_height * 0.5
+	local y = bottom_peg_y - config.params.slot_offset_from_pegs
+	local slot_scale = slot_width / config.params.sprite_width
 
 	for slot_index = 1, slot_count do
 		local x = slot_layout.get_slot_x(origin.x, slot_index)
@@ -28,10 +28,13 @@ local function create_slots(self)
 		local sprite_url = msg.url(nil, slot_id, "sprite")
 		go.set(sprite_url, "tint", get_slot_color(slot_index, slot_count))
 
-		if slot_index < slot_count then
-			local separator_x = x + slot_width * 0.5
-			factory.create("#separator_factory", vmath.vector3(separator_x, y, origin.z), nil, nil, slot_scale)
+		if slot_index == 1 then
+			local left_separator_x = x - slot_width * 0.5
+			factory.create("#separator_factory", vmath.vector3(left_separator_x, y, origin.z), nil, nil, slot_scale)
 		end
+
+		local right_separator_x = x + slot_width * 0.5
+		factory.create("#separator_factory", vmath.vector3(right_separator_x, y, origin.z), nil, nil, slot_scale)
 	end
 end
 

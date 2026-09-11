@@ -3,15 +3,19 @@ local config = require "scripts.config"
 local M = {}
 
 function M.get_slot_count()
-	return math.max(1, math.floor(config.pegs.triangle_bottom_count)) + 1
+	return math.max(2, math.floor(config.params.slots_count))
+end
+
+function M.get_peg_row_count()
+	return M.get_slot_count() - 1
 end
 
 function M.get_slot_width()
-	return config.pegs.field_width / M.get_slot_count()
+	return config.params.spacing
 end
 
 function M.get_peg_horizontal_spacing()
-	return M.get_slot_width()
+	return config.params.spacing
 end
 
 function M.get_slot_x(center_x, slot_index)

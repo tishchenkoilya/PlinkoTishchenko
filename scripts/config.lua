@@ -1,12 +1,14 @@
 local M = {}
 
-M.pegs = {
-	triangle_bottom_count = 9,
-	field_width = 560,
-}
+M.params = {
+	balls_count = 10,
+	multiple_balls_count = 4,
+	ball_regeneration_interval = 30,
 
-M.slots = {
-	offset_from_pegs = 90,
+	slots_count = 10,
+	spacing = 48,
+	offset_y = 32,
+	slot_offset_from_pegs = 80,
 	sprite_width = 32,
 
 	-- Ordered from the center slots towards both mirrored outer edges. Extra colors are ignored
@@ -26,9 +28,7 @@ M.slots = {
 		2,
 		1,
 	},
-}
 
-M.ball = {
 	despawn_delay = 3,
 }
 

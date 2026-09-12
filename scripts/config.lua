@@ -19,31 +19,13 @@ M.params = {
 	-- Vertical distance from the bottom pegs to the slots
 	slot_offset_from_pegs = 80,
 
-	-- Ordered from the center slots towards both mirrored outer edges. Extra colors are ignored
-	slots_colors = {
-		vmath.vector4(0.95, 0.55, 0.50, 1.0),
-		vmath.vector4(1.00, 0.80, 0.40, 1.0),
-		vmath.vector4(1.00, 0.95, 0.50, 1.0),
-		vmath.vector4(0.60, 0.95, 0.65, 1.0),
-		vmath.vector4(0.50, 0.85, 0.95, 1.0),
-	},
-
-	-- Ordered from the center slots towards both mirrored outer edges. Extra scores are ignored
-	slots_scores = {
-		1,
-		2,
-		3,
-		4,
-		5,
-	},
-
-	-- Ordered from the center slots towards both mirrored outer edges. Relative probability weights
-	probability = {
-		16,
-		8,
-		4,
-		2,
-		1,
+	-- Slot appearance, score, and weight from the center toward mirrored outer edges
+	slot_tiers = {
+		{ color = vmath.vector4(0.95, 0.55, 0.50, 1.0), score = 1, weight = 16 },
+		{ color = vmath.vector4(1.00, 0.80, 0.40, 1.0), score = 2, weight = 8 },
+		{ color = vmath.vector4(1.00, 0.95, 0.50, 1.0), score = 3, weight = 4 },
+		{ color = vmath.vector4(0.60, 0.95, 0.65, 1.0), score = 4, weight = 2 },
+		{ color = vmath.vector4(0.50, 0.85, 0.95, 1.0), score = 5, weight = 1 },
 	},
 
 	-- Seconds before a landed ball is removed

@@ -3,7 +3,7 @@ local config = require "scripts.config"
 local M = {}
 
 function M.get_slot_count()
-	return math.max(2, math.floor(config.params.slots_count))
+	return config.params.slots_count
 end
 
 function M.get_peg_row_count()
@@ -24,10 +24,13 @@ function M.get_slot_x(center_x, slot_index)
 	return first_x + (slot_index - 1) * M.get_slot_width()
 end
 
-function M.get_mirrored_value(values, slot_index, slot_count)
+function M.get_slot_tier(slot_index)
+	local slot_count = M.get_slot_count()
+	assert(slot_index == math.floor(slot_index) and slot_index >= 1 and slot_index <= slot_count,
+		"slot_index must be an integer within the board")
 	local center = (slot_count + 1) * 0.5
 	local value_index = math.floor(math.abs(slot_index - center)) + 1
-	return values[math.min(value_index, #values)]
+	return config.params.slot_tiers[math.min(value_index, #config.params.slot_tiers)]
 end
 
 return M

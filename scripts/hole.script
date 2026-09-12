@@ -1,30 +1,25 @@
-local config = require "scripts.config"
+local game_messages = require "scripts.game_messages"
 local slot_layout = require "scripts.slot_layout"
 
-local SPAWN_BALL = hash("spawn_ball")
-
-local function select_target_slot()
-	local weights = config.params.probability
-	local slot_count = slot_layout.get_slot_count()
-	assert(#weights > 0, "config.params.probability must contain at least one weight")
-
-	local total_weight = 0
-	for slot_index = 1, slot_count do
-		local weight = slot_layout.get_mirrored_value(weights, slot_index, slot_count)
-		assert(weight >= 0, "config.params.probability cannot contain negative weights")
-		total_weight = total_weight + weight
+local function initialize_target_weights(self)
+	self.target_weights = {}
+	self.total_target_weight = 0
+	for slot_index = 1, slot_layout.get_slot_count() do
+		local weight = slot_layout.get_slot_tier(slot_index).weight
+		self.target_weights[slot_index] = weight
+		self.total_target_weight = self.total_target_weight + weight
 	end
-	assert(total_weight > 0, "config.params.probability must contain a positive weight")
+end
 
-	local random_weight = math.random() * total_weight
-	for slot_index = 1, slot_count do
-		random_weight = random_weight - slot_layout.get_mirrored_value(weights, slot_index, slot_count)
+local function select_target_slot(self)
+	local random_weight = math.random() * self.total_target_weight
+	for slot_index = 1, #self.target_weights do
+		random_weight = random_weight - self.target_weights[slot_index]
 		if random_weight <= 0 then
 			return slot_index
 		end
 	end
-
-	return slot_count
+	return #self.target_weights
 end
 
 local function create_path(target_slot)
@@ -58,22 +53,20 @@ local function create_path(target_slot)
 end
 
 local function create_ball(self)
-	local position = go.get_world_position()
-
-	local target_slot = select_target_slot()
+	local target_slot = select_target_slot(self)
 	local path_bits, path_debug = create_path(target_slot)
-	assert(#config.params.slots_scores > 0, "config.params.slots_scores must contain at least one score")
-	local score = slot_layout.get_mirrored_value(config.params.slots_scores, target_slot, slot_layout.get_slot_count())
-
-	factory.create("#ball_factory", position, nil, {
+	factory.create("#ball_factory", go.get_world_position(), nil, {
 		path_bits = path_bits,
-		score = score,
 	})
-	print(string.format("Spawned ball target slot: %d, score: %d, path: %s", target_slot, score, path_debug))
+	print(string.format("Spawned ball target slot: %d, path: %s", target_slot, path_debug))
+end
+
+function init(self)
+	initialize_target_weights(self)
 end
 
 function on_message(self, message_id, message, sender)
-	if message_id == SPAWN_BALL then
+	if message_id == game_messages.SPAWN_BALLS then
 		local count = math.max(1, math.floor(message.count or 1))
 		for _ = 1, count do
 			create_ball(self)

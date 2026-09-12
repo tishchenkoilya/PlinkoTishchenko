@@ -19,10 +19,6 @@ embedded_components {
     z: 0.6
   }
 }
-components {
-  id: "script"
-  component: "/scripts/peg.script"
-}
 embedded_components {
   id: "collisionobject"
   type: "collisionobject"

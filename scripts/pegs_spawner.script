@@ -1,3 +1,4 @@
+local board_registry = require "scripts.board_registry"
 local config = require "scripts.config"
 local slot_layout = require "scripts.slot_layout"
 
@@ -14,9 +15,8 @@ local function create_peg_triangle(self)
 
 		for column = 1, row do
 			local x = first_x + (column - 1) * horizontal_spacing
-			factory.create("#peg_factory", vmath.vector3(x, y, origin.z), nil, {
-				row = row,
-			})
+			local peg_id = factory.create("#peg_factory", vmath.vector3(x, y, origin.z))
+			board_registry.register_peg(peg_id, row)
 		end
 	end
 end

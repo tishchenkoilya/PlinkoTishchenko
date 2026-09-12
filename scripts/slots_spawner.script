@@ -1,19 +1,17 @@
+local board_registry = require "scripts.board_registry"
 local config = require "scripts.config"
-local plinko_manager = require "scripts.plinko_manager"
+local game_messages = require "scripts.game_messages"
 local slot_layout = require "scripts.slot_layout"
 
 local PEGS_SPAWNER = "/pegs_spawner"
 local DEBUG = "/debug#script"
-local REGISTER_SLOT = hash("register_slot")
 local SLOT_SPRITE_WIDTH = 32
 
-local function get_slot_color(slot_index, slot_count)
-	return slot_layout.get_mirrored_value(config.params.slots_colors, slot_index, slot_count)
+local function get_slot_color(slot_index)
+	return slot_layout.get_slot_tier(slot_index).color
 end
 
 local function create_slots(self)
-	assert(#config.params.slots_colors > 0, "config.params.slots_colors must contain at least one color")
-
 	local origin = go.get_world_position()
 	local pegs_origin = go.get_world_position(PEGS_SPAWNER)
 	local slot_count = slot_layout.get_slot_count()
@@ -28,10 +26,10 @@ local function create_slots(self)
 		local x = slot_layout.get_slot_x(origin.x, slot_index)
 		local position = vmath.vector3(x, y, origin.z)
 		local slot_id = factory.create("#slot_factory", position, nil, nil, slot_scale)
-		plinko_manager.register_slot(slot_id, slot_index)
+		board_registry.register_slot(slot_id, slot_index)
 		local sprite_url = msg.url(nil, slot_id, "sprite")
-		go.set(sprite_url, "tint", get_slot_color(slot_index, slot_count))
-		msg.post(DEBUG, REGISTER_SLOT, {
+		go.set(sprite_url, "tint", get_slot_color(slot_index))
+		msg.post(DEBUG, game_messages.REGISTER_SLOT, {
 			slot_id = slot_id,
 			slot_index = slot_index,
 		})

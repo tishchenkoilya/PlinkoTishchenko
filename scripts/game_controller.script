@@ -1,0 +1,67 @@
+local board_registry = require "scripts.board_registry"
+local game_messages = require "scripts.game_messages"
+local game_save = require "scripts.game_save"
+local plinko_manager = require "scripts.plinko_manager"
+
+local function send_state(self, receiver)
+	msg.post(receiver, game_messages.GAME_STATE_CHANGED, self.manager:get_snapshot())
+end
+
+local function publish_state(self)
+	local state = self.manager:get_snapshot()
+	self.last_timer_seconds = state.seconds_until_next_ball
+	for _, subscriber in pairs(self.subscribers) do
+		msg.post(subscriber, game_messages.GAME_STATE_CHANGED, state)
+	end
+end
+
+local function save_state(self)
+	game_save.save(self.manager:get_save_state())
+end
+
+function init(self)
+	math.randomseed(os.time())
+	self.manager = plinko_manager.new()
+	self.manager:restore(game_save.load())
+	self.subscribers = {}
+	self.last_timer_seconds = self.manager:get_seconds_until_next_ball()
+end
+
+function update(self, dt)
+	local regenerated_count = self.manager:update(dt)
+	local timer_seconds = self.manager:get_seconds_until_next_ball()
+	if regenerated_count > 0 then
+		save_state(self)
+	end
+	if regenerated_count > 0 or timer_seconds ~= self.last_timer_seconds then
+		publish_state(self)
+	end
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == game_messages.SUBSCRIBE_GAME_STATE then
+		self.subscribers[tostring(sender)] = sender
+		send_state(self, sender)
+	elseif message_id == game_messages.UNSUBSCRIBE_GAME_STATE then
+		self.subscribers[tostring(sender)] = nil
+	elseif message_id == game_messages.TRY_SPAWN_BALLS then
+		if self.manager:try_spend_balls(message.count) then
+			msg.post(game_messages.HOLE_SPAWNER, game_messages.SPAWN_BALLS, { count = message.count })
+			save_state(self)
+			publish_state(self)
+		end
+	elseif message_id == game_messages.ADD_BALL then
+		self.manager:add_ball()
+		save_state(self)
+		publish_state(self)
+	elseif message_id == game_messages.RESET_GAME then
+		self.manager:reset()
+		save_state(self)
+		publish_state(self)
+	elseif message_id == game_messages.BALL_LANDED then
+		local slot_index = board_registry.get_slot_index(message.slot_id)
+		self.manager:record_landing(slot_index, message.count)
+		save_state(self)
+		publish_state(self)
+	end
+end

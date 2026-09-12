@@ -1,5 +1,9 @@
 name: "main"
 instances {
+  id: "game_controller"
+  prototype: "/objects/game_controller.go"
+}
+instances {
   id: "hole"
   prototype: "/objects/hole.go"
   position {

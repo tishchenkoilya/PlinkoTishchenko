@@ -1,9 +1,9 @@
+local board_registry = require "scripts.board_registry"
 local config = require "scripts.config"
-local plinko_manager = require "scripts.plinko_manager"
+local game_messages = require "scripts.game_messages"
 local slot_layout = require "scripts.slot_layout"
 
 go.property("path_bits", 0)
-go.property("score", 0)
 
 local COLLISION_RESPONSE = hash("collision_response")
 local PEG_GROUP = hash("peg")
@@ -23,8 +23,9 @@ function on_message(self, message_id, message, sender)
 
 	if message.other_group == SLOT_GROUP then
 		if not self.despawn_timer then
-			plinko_manager.add_slot_ball(message.other_id)
-			plinko_manager.add_score(self.score)
+			msg.post(game_messages.GAME_CONTROLLER, game_messages.BALL_LANDED, {
+				slot_id = message.other_id,
+			})
 			self.despawn_timer = timer.delay(config.params.despawn_delay, false, function()
 				go.delete()
 			end)
@@ -36,9 +37,8 @@ function on_message(self, message_id, message, sender)
 		return
 	end
 
-	local peg_script = msg.url(nil, message.other_id, "script")
-	local row = math.floor(go.get(peg_script, "row"))
-	if row < 1 or row > slot_layout.get_peg_row_count() or self.steered_rows[row] then
+	local row = board_registry.get_peg_row(message.other_id)
+	if self.steered_rows[row] then
 		return
 	end
 

@@ -1,7 +1,6 @@
-local plinko_manager = require "scripts.plinko_manager"
+local game_messages = require "scripts.game_messages"
 
 local DRAW_DEBUG_TEXT = hash("draw_debug_text")
-local REGISTER_SLOT = hash("register_slot")
 local TEXT_COLOR = vmath.vector4(1, 1, 1, 1)
 local PERCENTAGE_COLOR = vmath.vector4(0, 0, 0, 1)
 local SCORE_OFFSET = vmath.vector3(-110, -30, 0)
@@ -16,29 +15,45 @@ local function draw_text(text, position, color)
 	})
 end
 
+local function world_to_screen(self, world_position)
+	local view = go.get(self.camera, "view")
+	local projection = go.get(self.camera, "projection")
+	local clip_position = projection * view * vmath.vector4(
+		world_position.x,
+		world_position.y,
+		world_position.z,
+		1
+	)
+	local window_width, window_height = window.get_size()
+	local inverse_w = 1 / clip_position.w
+
+	return vmath.vector3(
+		(clip_position.x * inverse_w + 1) * window_width * 0.5,
+		(clip_position.y * inverse_w + 1) * window_height * 0.5,
+		0
+	)
+end
+
 local function get_score_position(self)
 	local background_size = go.get(self.background_sprite, "size")
 	local local_top_right = vmath.vector4(background_size.x * 0.5, background_size.y * 0.5, 0, 1)
 	local world_top_right = go.get_world_transform(self.background) * local_top_right
-	local screen_top_right = camera.world_to_screen(
-		vmath.vector3(world_top_right.x, world_top_right.y, world_top_right.z),
-		self.camera
+	local screen_top_right = world_to_screen(
+		self,
+		vmath.vector3(world_top_right.x, world_top_right.y, world_top_right.z)
 	)
-	screen_top_right.z = 0
 	return screen_top_right + SCORE_OFFSET
 end
 
 local function get_slot_screen_position(self, slot)
-	local position = camera.world_to_screen(go.get_world_position(slot.game_object), self.camera)
-	position.z = 0
-	return position
+	return world_to_screen(self, go.get_world_position(slot.game_object))
 end
 
 local function draw_slot_statistics(self)
-	local total_balls_count = plinko_manager.get_total_balls_count()
+	local total_balls_count = self.game_state.total_balls_count
 
 	for slot_index, slot in pairs(self.slots) do
-		local balls_count = plinko_manager.get_slot_balls_count(slot_index)
+		local balls_count = self.game_state.slot_balls_count[slot_index] or 0
 		local percentage = 0
 		if total_balls_count > 0 then
 			percentage = balls_count / total_balls_count * 100
@@ -52,22 +67,34 @@ end
 
 function init(self)
 	self.slots = self.slots or {}
+	self.game_state = {
+		score = 0,
+		slot_balls_count = {},
+		total_balls_count = 0,
+	}
 	self.background = msg.url("/background")
 	self.background_sprite = msg.url("/background#sprite")
 	self.camera = msg.url("/camera#camera")
+	msg.post(game_messages.GAME_CONTROLLER, game_messages.SUBSCRIBE_GAME_STATE)
+end
+
+function final(self)
+	msg.post(game_messages.GAME_CONTROLLER, game_messages.UNSUBSCRIBE_GAME_STATE)
 end
 
 function on_message(self, message_id, message, sender)
-	if message_id == REGISTER_SLOT then
+	if message_id == game_messages.REGISTER_SLOT then
 		self.slots = self.slots or {}
 		self.slots[message.slot_index] = {
 			game_object = msg.url(nil, message.slot_id, nil),
 		}
+	elseif message_id == game_messages.GAME_STATE_CHANGED then
+		self.game_state = message
 	end
 end
 
 function update(self, dt)
-	local text = "Score: " .. tostring(plinko_manager.get_score())
+	local text = "Score: " .. tostring(self.game_state.score)
 	draw_text(text, get_score_position(self), TEXT_COLOR)
 	draw_slot_statistics(self)
 end

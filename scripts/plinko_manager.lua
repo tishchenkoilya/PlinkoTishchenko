@@ -3,30 +3,14 @@ local slot_layout = require "scripts.slot_layout"
 
 local M = {}
 
-local SAVE_APPLICATION_ID = "plinko_tishchenko"
-local SAVE_FILE_NAME = "game_state"
+local Manager = {}
+Manager.__index = Manager
 
-local balls_count = 0
-local score = 0
-local regeneration_elapsed = 0
-local slot_balls_count = {}
-local total_balls_count = 0
-local slot_indices_by_id = {}
-
-local function get_regeneration_interval()
-	local interval = config.params.ball_regeneration_interval
-	assert(interval > 0, "config.params.ball_regeneration_interval must be greater than zero")
-	return interval
-end
-
-local function normalize_balls_count(count)
-	return math.max(0, math.floor(count or 0))
-end
-
-local function get_balls_max_count()
-	local balls_max_count = normalize_balls_count(config.params.balls_max_count)
-	assert(balls_max_count > 0, "config.params.balls_max_count must be greater than zero")
-	return balls_max_count
+local function normalize_count(value, default_value)
+	if type(value) ~= "number" or value ~= value then
+		return default_value or 0
+	end
+	return math.max(0, math.floor(value))
 end
 
 local function validate_slot_index(slot_index)
@@ -35,164 +19,152 @@ local function validate_slot_index(slot_index)
 	return slot_index
 end
 
-local function initialize_state(initial_balls_count)
-	balls_count = normalize_balls_count(initial_balls_count)
-	score = 0
-	regeneration_elapsed = 0
-	slot_balls_count = {}
-	total_balls_count = 0
+local function copy_slot_counts(source)
+	local copy = {}
 	for slot_index = 1, slot_layout.get_slot_count() do
-		slot_balls_count[slot_index] = 0
+		copy[slot_index] = source[slot_index] or 0
+	end
+	return copy
+end
+
+function Manager:_initialize_state()
+	self.balls_count = config.params.balls_count
+	self.score = 0
+	self.regeneration_elapsed = 0
+	self.slot_balls_count = {}
+	self.total_balls_count = 0
+	for slot_index = 1, slot_layout.get_slot_count() do
+		self.slot_balls_count[slot_index] = 0
 	end
 end
 
-local function get_save_file_path()
-	return sys.get_save_file(SAVE_APPLICATION_ID, SAVE_FILE_NAME)
-end
-
-function M.save()
-	sys.save(get_save_file_path(), {
-		balls_count = balls_count,
-		score = score,
-		slot_balls_count = slot_balls_count,
-		total_balls_count = total_balls_count,
-	})
-end
-
-function M.load()
-	initialize_state(config.params.balls_count)
-
-	local success, saved_state = pcall(sys.load, get_save_file_path())
-	if not success then
-		print("Failed to load game: " .. tostring(saved_state))
-		return false
-	end
-	if not next(saved_state) then
-		return false
+function Manager:restore(saved_state)
+	self:_initialize_state()
+	if type(saved_state) ~= "table" then
+		return
 	end
 
-	balls_count = normalize_balls_count(saved_state.balls_count or config.params.balls_count)
-	score = normalize_balls_count(saved_state.score)
+	self.balls_count = normalize_count(saved_state.balls_count, config.params.balls_count)
+	self.score = normalize_count(saved_state.score)
 
-	local saved_slot_balls_count = saved_state.slot_balls_count
-	local calculated_total_balls_count = 0
-	if type(saved_slot_balls_count) == "table" then
-		for slot_index = 1, slot_layout.get_slot_count() do
-			local count = normalize_balls_count(saved_slot_balls_count[slot_index])
-			slot_balls_count[slot_index] = count
-			calculated_total_balls_count = calculated_total_balls_count + count
-		end
+	local saved_slot_counts = type(saved_state.slot_balls_count) == "table" and saved_state.slot_balls_count or {}
+	local calculated_total = 0
+	for slot_index = 1, slot_layout.get_slot_count() do
+		local count = normalize_count(saved_slot_counts[slot_index])
+		self.slot_balls_count[slot_index] = count
+		calculated_total = calculated_total + count
 	end
 
-	if saved_state.total_balls_count == nil then
-		total_balls_count = calculated_total_balls_count
-	else
-		total_balls_count = normalize_balls_count(saved_state.total_balls_count)
-	end
-	return true
+	local saved_total = normalize_count(saved_state.total_balls_count, calculated_total)
+	self.total_balls_count = saved_total == calculated_total and saved_total or calculated_total
 end
 
-function M.reset()
-	initialize_state(config.params.balls_count)
-	M.save()
+function Manager:reset()
+	self:_initialize_state()
 end
 
-function M.update(dt)
-	local balls_max_count = get_balls_max_count()
-	if balls_count >= balls_max_count then
-		regeneration_elapsed = 0
+function Manager:update(dt)
+	local balls_max_count = config.params.balls_max_count
+	if self.balls_count >= balls_max_count then
+		self.regeneration_elapsed = 0
 		return 0
 	end
 
-	regeneration_elapsed = regeneration_elapsed + math.max(0, dt)
-
-	local interval = get_regeneration_interval()
-	local elapsed_intervals = math.floor(regeneration_elapsed / interval)
-	local regenerated_count = 0
-	if elapsed_intervals > 0 then
-		local previous_balls_count = balls_count
-		balls_count = math.min(balls_count + elapsed_intervals, balls_max_count)
-		regenerated_count = balls_count - previous_balls_count
-		regeneration_elapsed = regeneration_elapsed - elapsed_intervals * interval
-		if balls_count >= balls_max_count then
-			regeneration_elapsed = 0
-		end
-		M.save()
+	self.regeneration_elapsed = self.regeneration_elapsed + math.max(0, dt)
+	local elapsed_intervals = math.floor(self.regeneration_elapsed / config.params.ball_regeneration_interval)
+	if elapsed_intervals == 0 then
+		return 0
 	end
 
+	local previous_balls_count = self.balls_count
+	self.balls_count = math.min(self.balls_count + elapsed_intervals, balls_max_count)
+	local regenerated_count = self.balls_count - previous_balls_count
+	self.regeneration_elapsed = self.regeneration_elapsed - elapsed_intervals * config.params.ball_regeneration_interval
+	if self.balls_count >= balls_max_count then
+		self.regeneration_elapsed = 0
+	end
 	return regenerated_count
 end
 
-function M.get_balls_count()
-	return balls_count
+function Manager:get_balls_count()
+	return self.balls_count
 end
 
-function M.add_ball()
-	balls_count = balls_count + 1
-	if balls_count >= get_balls_max_count() then
-		regeneration_elapsed = 0
+function Manager:add_ball()
+	self.balls_count = self.balls_count + 1
+	if self.balls_count >= config.params.balls_max_count then
+		self.regeneration_elapsed = 0
 	end
-	M.save()
 end
 
-function M.get_score()
+function Manager:get_score()
+	return self.score
+end
+
+function Manager:get_slot_balls_count(slot_index)
+	return self.slot_balls_count[validate_slot_index(slot_index)]
+end
+
+function Manager:get_total_balls_count()
+	return self.total_balls_count
+end
+
+function Manager:record_landing(slot_index, count)
+	slot_index = validate_slot_index(slot_index)
+	count = math.max(1, normalize_count(count, 1))
+
+	local score = slot_layout.get_slot_tier(slot_index).score * count
+	self.slot_balls_count[slot_index] = self.slot_balls_count[slot_index] + count
+	self.total_balls_count = self.total_balls_count + count
+	self.score = self.score + score
 	return score
 end
 
-function M.add_score(value)
-	score = score + math.max(0, math.floor(value or 0))
-	M.save()
-end
-
-function M.register_slot(slot_id, slot_index)
-	slot_indices_by_id[slot_id] = validate_slot_index(slot_index)
-end
-
-function M.get_slot_balls_count(slot_index)
-	return slot_balls_count[validate_slot_index(slot_index)]
-end
-
-function M.get_total_balls_count()
-	return total_balls_count
-end
-
-function M.add_slot_ball(slot_id, count)
-	local slot_index = slot_indices_by_id[slot_id]
-	assert(slot_index, "slot must be registered before adding a ball")
-	count = math.max(1, math.floor(count or 1))
-	slot_balls_count[slot_index] = slot_balls_count[slot_index] + count
-	total_balls_count = total_balls_count + count
-	M.save()
-end
-
-function M.get_seconds_until_next_ball()
-	if balls_count >= get_balls_max_count() then
+function Manager:get_seconds_until_next_ball()
+	if self.balls_count >= config.params.balls_max_count then
 		return 0
 	end
-	return math.ceil(get_regeneration_interval() - regeneration_elapsed)
+	return math.ceil(config.params.ball_regeneration_interval - self.regeneration_elapsed)
 end
 
-function M.has_enough_balls(count)
-	count = normalize_balls_count(count)
-	return count > 0 and balls_count >= count
+function Manager:has_enough_balls(count)
+	count = normalize_count(count)
+	return count > 0 and self.balls_count >= count
 end
 
-function M.try_spend_balls(count)
-	count = normalize_balls_count(count)
-	if not M.has_enough_balls(count) then
+function Manager:try_spend_balls(count)
+	count = normalize_count(count)
+	if not self:has_enough_balls(count) then
 		return false
 	end
 
-	local balls_max_count = get_balls_max_count()
-	local regeneration_was_paused = balls_count >= balls_max_count
-	balls_count = balls_count - count
-	if regeneration_was_paused and balls_count < balls_max_count then
-		regeneration_elapsed = 0
+	local regeneration_was_paused = self.balls_count >= config.params.balls_max_count
+	self.balls_count = self.balls_count - count
+	if regeneration_was_paused and self.balls_count < config.params.balls_max_count then
+		self.regeneration_elapsed = 0
 	end
-	M.save()
 	return true
 end
 
-initialize_state(config.params.balls_count)
+function Manager:get_save_state()
+	return {
+		balls_count = self.balls_count,
+		score = self.score,
+		slot_balls_count = copy_slot_counts(self.slot_balls_count),
+		total_balls_count = self.total_balls_count,
+	}
+end
+
+function Manager:get_snapshot()
+	local snapshot = self:get_save_state()
+	snapshot.seconds_until_next_ball = self:get_seconds_until_next_ball()
+	return snapshot
+end
+
+function M.new()
+	local manager = setmetatable({}, Manager)
+	manager:_initialize_state()
+	return manager
+end
 
 return M

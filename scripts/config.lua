@@ -1,16 +1,23 @@
 local M = {}
 
 M.params = {
+	-- Initial balls count
 	balls_count = 10,
+	-- Maximum number of regenerated balls
 	balls_max_count = 20,
+	-- Balls spawned by the multi-spawn button
 	multiple_balls_count = 5,
-	ball_regeneration_interval = 5,
+	-- Seconds required to regenerate one ball
+	ball_regeneration_interval = 10,
 
+	-- Number of landing slots
 	slots_count = 10,
+	-- Horizontal spacing between pegs and slots
 	spacing = 48,
+	-- Vertical offset of the peg layout
 	offset_y = 32,
+	-- Vertical distance from the bottom pegs to the slots
 	slot_offset_from_pegs = 80,
-	sprite_width = 32,
 
 	-- Ordered from the center slots towards both mirrored outer edges. Extra colors are ignored
 	slots_colors = {
@@ -39,6 +46,7 @@ M.params = {
 		1,
 	},
 
+	-- Seconds before a landed ball is removed
 	despawn_delay = 3,
 }
 

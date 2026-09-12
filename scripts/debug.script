@@ -35,20 +35,17 @@ local function get_slot_screen_position(self, slot)
 end
 
 local function draw_slot_statistics(self)
-	local total_balls_count = 0
-	for _, slot in pairs(self.slots) do
-		slot.balls_count = math.max(0, math.floor(go.get(slot.script, "balls_count")))
-		total_balls_count = total_balls_count + slot.balls_count
-	end
+	local total_balls_count = plinko_manager.get_total_balls_count()
 
-	for _, slot in pairs(self.slots) do
+	for slot_index, slot in pairs(self.slots) do
+		local balls_count = plinko_manager.get_slot_balls_count(slot_index)
 		local percentage = 0
 		if total_balls_count > 0 then
-			percentage = slot.balls_count / total_balls_count * 100
+			percentage = balls_count / total_balls_count * 100
 		end
 
 		local position = get_slot_screen_position(self, slot)
-		draw_text(tostring(slot.balls_count), position + SLOT_COUNT_OFFSET, TEXT_COLOR)
+		draw_text(tostring(balls_count), position + SLOT_COUNT_OFFSET, TEXT_COLOR)
 		draw_text(string.format("%.1f%%", percentage), position + SLOT_PERCENTAGE_OFFSET, PERCENTAGE_COLOR)
 	end
 end
@@ -65,7 +62,6 @@ function on_message(self, message_id, message, sender)
 		self.slots = self.slots or {}
 		self.slots[message.slot_index] = {
 			game_object = msg.url(nil, message.slot_id, nil),
-			script = msg.url(nil, message.slot_id, "script"),
 		}
 	end
 end

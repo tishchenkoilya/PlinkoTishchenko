@@ -9,7 +9,7 @@ textures {
 }
 nodes {
   position {
-    x: 240.0
+    x: 50.0
     y: 50.0
   }
   type: TYPE_BOX
@@ -35,7 +35,7 @@ nodes {
 }
 nodes {
   position {
-    x: 320.0
+    x: 130.0
     y: 50.0
   }
   type: TYPE_BOX
@@ -124,7 +124,7 @@ nodes {
 }
 nodes {
   position {
-    x: 508.0
+    x: 430.0
     y: 50.0
   }
   type: TYPE_BOX
@@ -146,6 +146,37 @@ nodes {
   font: "main_font"
   id: "text2"
   parent: "button_test_add"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 510.0
+    y: 50.0
+  }
+  type: TYPE_BOX
+  texture: "ui/btn_green_normal"
+  id: "button_test_reset"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: 8.0
+  }
+  scale {
+    x: 0.6
+    y: 0.6
+    z: 0.6
+  }
+  size {
+    x: 100.0
+    y: 40.0
+  }
+  type: TYPE_TEXT
+  text: "Reset"
+  font: "main_font"
+  id: "text3"
+  parent: "button_test_reset"
   inherit_alpha: true
 }
 material: "/builtins/materials/gui.material"

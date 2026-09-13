@@ -1,14 +1,14 @@
 images {
-  image: "/images/body.png"
+  image: "/images/background.png"
 }
 images {
-  image: "/images/ball_1.png"
+  image: "/images/ball.png"
 }
 images {
-  image: "/images/ball_2.png"
+  image: "/images/peg.png"
 }
 images {
-  image: "/images/ball_3.png"
+  image: "/images/hole.png"
 }
 images {
   image: "/images/rect.png"

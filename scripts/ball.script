@@ -1,7 +1,7 @@
 local board_registry = require "scripts.board_registry"
+local board_layout = require "scripts.board_layout"
 local config = require "scripts.config"
 local game_messages = require "scripts.game_messages"
-local slot_layout = require "scripts.slot_layout"
 
 go.property("path_bits", 0)
 
@@ -12,8 +12,9 @@ local SLOT_GROUP = hash("slot")
 function init(self)
 	self.steered_rows = {}
 	local gravity = math.abs(sys.get_config_number("physics.gravity_y", -600))
-	local row_fall_time = math.sqrt(2 * slot_layout.get_peg_horizontal_spacing() / gravity)
-	self.peg_steering_speed = slot_layout.get_peg_horizontal_spacing() * 0.5 / row_fall_time
+	local horizontal_spacing = board_layout.get_horizontal_spacing()
+	local row_fall_time = math.sqrt(2 * horizontal_spacing / gravity)
+	self.peg_steering_speed = horizontal_spacing * 0.5 / row_fall_time
 end
 
 function on_message(self, message_id, message, sender)
@@ -22,11 +23,12 @@ function on_message(self, message_id, message, sender)
 	end
 
 	if message.other_group == SLOT_GROUP then
-		if not self.despawn_timer then
+		if not self.has_landed then
+			self.has_landed = true
 			msg.post(game_messages.GAME_CONTROLLER, game_messages.BALL_LANDED, {
 				slot_id = message.other_id,
 			})
-			self.despawn_timer = timer.delay(config.params.despawn_delay, false, function()
+			timer.delay(config.params.despawn_delay, false, function()
 				go.delete()
 			end)
 		end

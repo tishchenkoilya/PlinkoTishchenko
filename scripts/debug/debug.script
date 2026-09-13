@@ -1,5 +1,7 @@
+local board_layout = require "scripts.board_layout"
 local game_messages = require "scripts.game_messages"
 
+local BOARD_SPAWNER = "/board_spawner"
 local DRAW_DEBUG_TEXT = hash("draw_debug_text")
 local TEXT_COLOR = vmath.vector4(1, 1, 1, 1)
 local PERCENTAGE_COLOR = vmath.vector4(0, 0, 0, 1)
@@ -45,35 +47,32 @@ local function get_score_position(self)
 	return screen_top_right + SCORE_OFFSET
 end
 
-local function get_slot_screen_position(self, slot)
-	return world_to_screen(self, go.get_world_position(slot.game_object))
-end
-
 local function draw_slot_statistics(self)
-	local total_balls_count = self.game_state.total_balls_count
+	local total_landing_count = self.game_state.total_landing_count
 
-	for slot_index, slot in pairs(self.slots) do
-		local balls_count = self.game_state.slot_balls_count[slot_index] or 0
+	for slot_index = 1, board_layout.get_slot_count() do
+		local landing_count = self.game_state.landings_by_slot[slot_index] or 0
 		local percentage = 0
-		if total_balls_count > 0 then
-			percentage = balls_count / total_balls_count * 100
+		if total_landing_count > 0 then
+			percentage = landing_count / total_landing_count * 100
 		end
 
-		local position = get_slot_screen_position(self, slot)
-		draw_text(tostring(balls_count), position + SLOT_COUNT_OFFSET, TEXT_COLOR)
-		draw_text(string.format("%.1f%%", percentage), position + SLOT_PERCENTAGE_OFFSET, PERCENTAGE_COLOR)
+		local world_position = board_layout.get_slot_position(self.board_origin, slot_index)
+		local screen_position = world_to_screen(self, world_position)
+		draw_text(tostring(landing_count), screen_position + SLOT_COUNT_OFFSET, TEXT_COLOR)
+		draw_text(string.format("%.1f%%", percentage), screen_position + SLOT_PERCENTAGE_OFFSET, PERCENTAGE_COLOR)
 	end
 end
 
 function init(self)
-	self.slots = self.slots or {}
 	self.game_state = {
 		score = 0,
-		slot_balls_count = {},
-		total_balls_count = 0,
+		landings_by_slot = {},
+		total_landing_count = 0,
 	}
 	self.background = msg.url("/background")
 	self.background_sprite = msg.url("/background#sprite")
+	self.board_origin = go.get_world_position(BOARD_SPAWNER)
 	self.camera = msg.url("/camera#camera")
 	msg.post(game_messages.GAME_CONTROLLER, game_messages.SUBSCRIBE_GAME_STATE)
 end
@@ -83,18 +82,12 @@ function final(self)
 end
 
 function on_message(self, message_id, message, sender)
-	if message_id == game_messages.REGISTER_SLOT then
-		self.slots = self.slots or {}
-		self.slots[message.slot_index] = {
-			game_object = msg.url(nil, message.slot_id, nil),
-		}
-	elseif message_id == game_messages.GAME_STATE_CHANGED then
+	if message_id == game_messages.GAME_STATE_CHANGED then
 		self.game_state = message
 	end
 end
 
 function update(self, dt)
-	local text = "Score: " .. tostring(self.game_state.score)
-	draw_text(text, get_score_position(self), TEXT_COLOR)
+	draw_text("Score: " .. tostring(self.game_state.score), get_score_position(self), TEXT_COLOR)
 	draw_slot_statistics(self)
 end

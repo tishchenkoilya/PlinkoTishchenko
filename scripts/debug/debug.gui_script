@@ -1,0 +1,38 @@
+local druid = require "druid.druid"
+local game_messages = require "scripts.game_messages"
+local gui_helpers = require "scripts.gui.gui_helpers"
+
+local DEBUG_GUI_RENDER_ORDER = 1
+
+local function add_ball()
+	msg.post(game_messages.GAME_CONTROLLER, game_messages.ADD_BALL)
+end
+
+local function reset_game()
+	msg.post(game_messages.GAME_CONTROLLER, game_messages.RESET_GAME)
+end
+
+function init(self)
+	gui.set_render_order(DEBUG_GUI_RENDER_ORDER)
+	self.druid = druid.new(self)
+	gui_helpers.new_button(self.druid, "add_ball_button", add_ball)
+	gui_helpers.new_button(self.druid, "reset_game_button", reset_game)
+	self.druid:new_text("add_ball_label", nil, "no_adjust")
+	self.druid:new_text("reset_game_label", nil, "no_adjust")
+end
+
+function update(self, dt)
+	self.druid:update(dt)
+end
+
+function final(self)
+	self.druid:final()
+end
+
+function on_input(self, action_id, action)
+	return self.druid:on_input(action_id, action)
+end
+
+function on_message(self, message_id, message, sender)
+	self.druid:on_message(message_id, message, sender)
+end

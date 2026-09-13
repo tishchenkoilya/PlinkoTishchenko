@@ -4,6 +4,15 @@ instances {
   prototype: "/objects/game_controller.go"
 }
 instances {
+  id: "ball_spawner"
+  prototype: "/objects/spawners/ball_spawner.go"
+  position {
+    x: 280.0
+    y: 700.0
+    z: 1.0
+  }
+}
+instances {
   id: "hole"
   prototype: "/objects/hole.go"
   position {
@@ -13,8 +22,8 @@ instances {
   }
 }
 instances {
-  id: "pegs_spawner"
-  prototype: "/objects/pegs_spawner.go"
+  id: "board_spawner"
+  prototype: "/objects/spawners/board_spawner.go"
   position {
     x: 280.0
     y: 390.0
@@ -22,16 +31,8 @@ instances {
   }
 }
 instances {
-  id: "slots_spawner"
-  prototype: "/objects/slots_spawner.go"
-  position {
-    x: 280.0
-    z: 1.0
-  }
-}
-instances {
   id: "debug"
-  prototype: "/objects/debug.go"
+  prototype: "/objects/debug/debug.go"
 }
 scale_along_z: 0
 embedded_instances {
@@ -60,7 +61,7 @@ embedded_instances {
   data: "embedded_components {\n"
   "  id: \"sprite\"\n"
   "  type: \"sprite\"\n"
-  "  data: \"default_animation: \\\"body\\\"\\n"
+  "  data: \"default_animation: \\\"background\\\"\\n"
   "material: \\\"/builtins/materials/sprite.material\\\"\\n"
   "size {\\n"
   "  x: 560.0\\n"

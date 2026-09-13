@@ -1,6 +1,10 @@
 components {
   id: "script"
-  component: "/scripts/slots_spawner.script"
+  component: "/scripts/spawners/board_spawner.script"
+}
+components {
+  id: "peg_factory"
+  component: "/factories/peg.factory"
 }
 components {
   id: "slot_factory"

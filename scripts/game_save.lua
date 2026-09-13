@@ -1,7 +1,7 @@
 local M = {}
 
 local SAVE_APPLICATION_ID = "plinko_tishchenko"
-local SAVE_FILE_NAME = "game_state"
+local SAVE_FILE_NAME = "save"
 local SAVE_VERSION = 1
 
 local function get_save_file_path()
@@ -28,14 +28,8 @@ function M.load()
 	return saved_state
 end
 
-function M.save(state)
-	local save_data = {
-		version = SAVE_VERSION,
-		balls_count = state.balls_count,
-		score = state.score,
-		slot_balls_count = state.slot_balls_count,
-		total_balls_count = state.total_balls_count,
-	}
+function M.save(save_data)
+	save_data.version = SAVE_VERSION
 
 	local success, result = pcall(function()
 		return sys.save(get_save_file_path(), save_data)

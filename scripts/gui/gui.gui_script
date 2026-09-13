@@ -1,0 +1,56 @@
+local config = require "scripts.config"
+local druid = require "druid.druid"
+local game_messages = require "scripts.game_messages"
+local gui_helpers = require "scripts.gui.gui_helpers"
+
+local function format_time(seconds)
+	seconds = math.max(0, math.ceil(seconds))
+	local hours = math.floor(seconds / 3600)
+	local minutes = math.floor(seconds % 3600 / 60)
+	local remaining_seconds = seconds % 60
+	return string.format("%02d:%02d:%02d", hours, minutes, remaining_seconds)
+end
+
+local function update_status(self, state)
+	self.balls_count_text:set_text(state.balls_count)
+	self.timer_text:set_text(format_time(state.seconds_until_next_ball))
+end
+
+local function try_spawn_balls(self, count)
+	msg.post(game_messages.GAME_CONTROLLER, game_messages.TRY_SPAWN_BALLS, { count = count })
+end
+
+function init(self)
+	self.druid = druid.new(self)
+
+	gui_helpers.new_button(self.druid, "spawn_one_button", try_spawn_balls, 1)
+	gui_helpers.new_button(self.druid, "spawn_multiple_button", try_spawn_balls, config.params.multi_spawn_count)
+
+	self.druid:new_text("spawn_one_label", nil, "no_adjust")
+	self.druid:new_text("spawn_multiple_label", "x" .. config.params.multi_spawn_count, "no_adjust")
+	self.druid:new_text("balls_label", nil, "no_adjust")
+	self.balls_count_text = self.druid:new_text("balls_count", config.params.initial_balls_count, "no_adjust")
+	self.timer_text = self.druid:new_text("regeneration_timer", nil, "no_adjust")
+
+	msg.post(game_messages.GAME_CONTROLLER, game_messages.SUBSCRIBE_GAME_STATE)
+end
+
+function update(self, dt)
+	self.druid:update(dt)
+end
+
+function final(self)
+	msg.post(game_messages.GAME_CONTROLLER, game_messages.UNSUBSCRIBE_GAME_STATE)
+	self.druid:final()
+end
+
+function on_input(self, action_id, action)
+	return self.druid:on_input(action_id, action)
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == game_messages.GAME_STATE_CHANGED then
+		update_status(self, message)
+	end
+	self.druid:on_message(message_id, message, sender)
+end

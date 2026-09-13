@@ -1,0 +1,42 @@
+local board_layout = require "scripts.board_layout"
+local board_registry = require "scripts.board_registry"
+
+local SLOT_SPRITE_WIDTH = 32
+
+local function create_pegs(origin)
+	for row = 1, board_layout.get_peg_row_count() do
+		for column = 1, row do
+			local position = board_layout.get_peg_position(origin, row, column)
+			local peg_id = factory.create("#peg_factory", position)
+			board_registry.register_peg(peg_id, row)
+		end
+	end
+end
+
+local function create_slots(origin)
+	local slot_width = board_layout.get_horizontal_spacing()
+	local slot_scale = slot_width / SLOT_SPRITE_WIDTH
+
+	for slot_index = 1, board_layout.get_slot_count() do
+		local position = board_layout.get_slot_position(origin, slot_index)
+		local slot_id = factory.create("#slot_factory", position, nil, nil, slot_scale)
+		board_registry.register_slot(slot_id, slot_index)
+
+		local sprite_url = msg.url(nil, slot_id, "sprite")
+		go.set(sprite_url, "tint", board_layout.get_slot_tier(slot_index).color)
+
+		if slot_index == 1 then
+			local left_separator_position = vmath.vector3(position.x - slot_width * 0.5, position.y, position.z)
+			factory.create("#separator_factory", left_separator_position, nil, nil, slot_scale)
+		end
+
+		local right_separator_position = vmath.vector3(position.x + slot_width * 0.5, position.y, position.z)
+		factory.create("#separator_factory", right_separator_position, nil, nil, slot_scale)
+	end
+end
+
+function init(self)
+	local origin = go.get_world_position()
+	create_pegs(origin)
+	create_slots(origin)
+end

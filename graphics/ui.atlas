@@ -4,4 +4,7 @@ images {
 images {
   image: "/images/btn_green_push.png"
 }
+images {
+  image: "/images/rounded_rect.png"
+}
 extrude_borders: 2

@@ -9,19 +9,26 @@ textures {
 }
 nodes {
   position {
-    x: 430.0
+    x: 420.0
     y: 50.0
   }
+  scale {
+    x: 0.9
+    y: 0.9
+    z: 0.9
+  }
+  color {
+    x: 0.4
+    y: 0.5019608
+    z: 0.9019608
+  }
   type: TYPE_BOX
-  texture: "ui/btn_green_normal"
+  texture: "ui/rounded_rect"
   id: "add_ball_button"
   inherit_alpha: true
   size_mode: SIZE_MODE_AUTO
 }
 nodes {
-  position {
-    y: 8.0
-  }
   size {
     x: 100.0
     y: 40.0
@@ -38,16 +45,23 @@ nodes {
     x: 510.0
     y: 50.0
   }
+  scale {
+    x: 0.9
+    y: 0.9
+    z: 0.9
+  }
+  color {
+    x: 0.4
+    y: 0.5019608
+    z: 0.9019608
+  }
   type: TYPE_BOX
-  texture: "ui/btn_green_normal"
+  texture: "ui/rounded_rect"
   id: "reset_game_button"
   inherit_alpha: true
   size_mode: SIZE_MODE_AUTO
 }
 nodes {
-  position {
-    y: 8.0
-  }
   scale {
     x: 0.6
     y: 0.6

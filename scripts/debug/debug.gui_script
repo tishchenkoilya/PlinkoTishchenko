@@ -1,6 +1,5 @@
 local druid = require "druid.druid"
 local game_messages = require "scripts.game_messages"
-local gui_helpers = require "scripts.gui.gui_helpers"
 
 local DEBUG_GUI_RENDER_ORDER = 1
 
@@ -15,8 +14,8 @@ end
 function init(self)
 	gui.set_render_order(DEBUG_GUI_RENDER_ORDER)
 	self.druid = druid.new(self)
-	gui_helpers.new_button(self.druid, "add_ball_button", add_ball)
-	gui_helpers.new_button(self.druid, "reset_game_button", reset_game)
+	self.druid:new_button("add_ball_button", add_ball)
+	self.druid:new_button("reset_game_button", reset_game)
 	self.druid:new_text("add_ball_label", nil, "no_adjust")
 	self.druid:new_text("reset_game_label", nil, "no_adjust")
 end
